@@ -196,13 +196,27 @@ const DEFAULT_SHELVES=[
 ];
 
 // ═══ Init ═══
-async function init(){
-  await openDB();
-  shelves=await dbAll('shelves');
-  folders=await dbAll('folders');
-  notes=await dbAll('notes');
-  if(shelves.length===0){for(const s of DEFAULT_SHELVES){await dbPut('shelves',s)};shelves=DEFAULT_SHELVES}
-  render();
+async function init() {
+  // 🔴 請刪除這一行：await openDB();
+  
+  try {
+    // 🟢 改用 Firebase 抓取資料
+    shelves = await dbAll('shelves');
+    folders = await dbAll('folders');
+    notes = await dbAll('notes');
+
+    if(shelves.length === 0){
+      for(const s of DEFAULT_SHELVES){
+        await dbPut('shelves', s);
+      }
+      shelves = DEFAULT_SHELVES;
+    }
+  } catch (error) {
+    console.error("雲端載入失敗:", error);
+    shelves = DEFAULT_SHELVES; // 備案：失敗也至少顯示預設書架
+  }
+  
+  render(); // 👈 確保這行在最後，畫面才會畫出來
 }
 
 function showToast(msg){
