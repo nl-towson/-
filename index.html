@@ -197,13 +197,22 @@ const DEFAULT_SHELVES=[
 ];
 
 // ═══ Init ═══
-async function init(){
-  await openDB();
-  shelves=await dbAll('shelves');
-  folders=await dbAll('folders');
-  notes=await dbAll('notes');
-  if(shelves.length===0){for(const s of DEFAULT_SHELVES){await dbPut('shelves',s)};shelves=DEFAULT_SHELVES}
-  render();
+async function init() {
+    try {
+        // 從雲端讀取
+        shelves = await dbAll('shelves');
+        folders = await dbAll('folders');
+        notes = await dbAll('notes');
+
+        if (shelves.length === 0) {
+            for (const s of DEFAULT_SHELVES) await dbPut('shelves', s);
+            shelves = DEFAULT_SHELVES;
+        }
+        
+        render(); // 👈 確保這行存在，首頁才會顯示出來
+    } catch (e) {
+        console.error("載入失敗:", e);
+    }
 }
 
 function showToast(msg){
