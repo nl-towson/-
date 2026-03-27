@@ -138,12 +138,39 @@ img{max-width:100%;border-radius:10px}
 
 <script>
 // ═══ IndexedDB Storage ═══
-const DB_NAME='KnowledgeBase';const DB_VER=1;
-let db;
-function openDB(){return new Promise((res,rej)=>{const r=indexedDB.open(DB_NAME,DB_VER);r.onupgradeneeded=e=>{const d=e.target.result;if(!d.objectStoreNames.contains('shelves'))d.createObjectStore('shelves',{keyPath:'id'});if(!d.objectStoreNames.contains('folders'))d.createObjectStore('folders',{keyPath:'id'});if(!d.objectStoreNames.contains('notes'))d.createObjectStore('notes',{keyPath:'id'})};r.onsuccess=e=>{db=e.target.result;res(db)};r.onerror=e=>rej(e)})}
-function dbAll(store){return new Promise((res,rej)=>{const tx=db.transaction(store,'readonly');const s=tx.objectStore(store);const r=s.getAll();r.onsuccess=()=>res(r.result);r.onerror=e=>rej(e)})}
-function dbPut(store,data){return new Promise((res,rej)=>{const tx=db.transaction(store,'readwrite');const s=tx.objectStore(store);s.put(data);tx.oncomplete=()=>res();tx.onerror=e=>rej(e)})}
-function dbDel(store,id){return new Promise((res,rej)=>{const tx=db.transaction(store,'readwrite');tx.objectStore(store).delete(id);tx.oncomplete=()=>res();tx.onerror=e=>rej(e)})}
+// 1. 初始化 Firebase (確保你已在 HTML 頂部引入了 SDK)
+const firebaseConfig = {
+    apiKey: "AIzaSyBNCpvL8E--zV5A4umNhVrr6W3DVuGEWPw", //
+    authDomain: "encyclopedia-37e78.firebaseapp.com",
+    projectId: "encyclopedia-37e78",
+    storageBucket: "encyclopedia-37e78.firebasestorage.app",
+    messagingSenderId: "732048515950",
+    appId: "1:732048515950:web:65dc9ffa0f490e71cf177f"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+// 2. 替換原本的 dbAll (改為從雲端抓取)
+async function dbAll(storeName) {
+    const snapshot = await db.collection(storeName).orderBy('order', 'asc').get();
+    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+}
+
+// 3. 替換原本的 dbPut (改為同步到雲端)
+async function dbPut(storeName, data) {
+    const id = data.id || uid();
+    await db.collection(storeName).doc(id).set({
+        ...data,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    return id;
+}
+
+// 4. 替換原本的 dbDel (雲端刪除)
+async function dbDel(storeName, id) {
+    await db.collection(storeName).doc(id).delete();
+}
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
 const fmtDate=t=>{const d=new Date(t);return`${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`};
 
