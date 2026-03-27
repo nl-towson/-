@@ -136,49 +136,14 @@ img{max-width:100%;border-radius:10px}
 <div id="toast" class="toast hidden"></div>
 <div id="modal" class="overlay hidden"></div>
 
-<script type="module">
+<script>
 // ═══ IndexedDB Storage ═══
 const DB_NAME='KnowledgeBase';const DB_VER=1;
 let db;
-// 1. 引入 Firebase 模組
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-import { getFirestore, collection, getDocs, doc, setDoc, deleteDoc, query, orderBy, serverTimestamp } 
-from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-
-// 2. 配置資訊
-const firebaseConfig = {
-    apiKey: "AIzaSyBNCpvL8E--zV5A4umNhVrr6W3DVuGEWPw",
-    authDomain: "encyclopedia-37e78.firebaseapp.com",
-    projectId: "encyclopedia-37e78",
-    storageBucket: "encyclopedia-37e78.firebasestorage.app",
-    messagingSenderId: "732048515950",
-    appId: "1:732048515950:web:65dc9ffa0f490e71cf177f"
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-
-// 3. 重新定義雲端操作函式
-async function dbAll(storeName) {
-    const q = query(collection(db, storeName), orderBy('order', 'asc'));
-    const snapshot = await getDocs(q);
-    return snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-}
-
-async function dbPut(storeName, data) {
-    const id = data.id || uid();
-    await setDoc(doc(db, storeName, id), {
-        ...data,
-        updatedAt: serverTimestamp()
-    });
-    return id;
-}
-
-async function dbDel(storeName, id) {
-    await deleteDoc(doc(db, storeName, id));
-}
-
-// 工具函式保留
+function openDB(){return new Promise((res,rej)=>{const r=indexedDB.open(DB_NAME,DB_VER);r.onupgradeneeded=e=>{const d=e.target.result;if(!d.objectStoreNames.contains('shelves'))d.createObjectStore('shelves',{keyPath:'id'});if(!d.objectStoreNames.contains('folders'))d.createObjectStore('folders',{keyPath:'id'});if(!d.objectStoreNames.contains('notes'))d.createObjectStore('notes',{keyPath:'id'})};r.onsuccess=e=>{db=e.target.result;res(db)};r.onerror=e=>rej(e)})}
+function dbAll(store){return new Promise((res,rej)=>{const tx=db.transaction(store,'readonly');const s=tx.objectStore(store);const r=s.getAll();r.onsuccess=()=>res(r.result);r.onerror=e=>rej(e)})}
+function dbPut(store,data){return new Promise((res,rej)=>{const tx=db.transaction(store,'readwrite');const s=tx.objectStore(store);s.put(data);tx.oncomplete=()=>res();tx.onerror=e=>rej(e)})}
+function dbDel(store,id){return new Promise((res,rej)=>{const tx=db.transaction(store,'readwrite');tx.objectStore(store).delete(id);tx.oncomplete=()=>res();tx.onerror=e=>rej(e)})}
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
 const fmtDate=t=>{const d=new Date(t);return`${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`};
 
@@ -197,22 +162,13 @@ const DEFAULT_SHELVES=[
 ];
 
 // ═══ Init ═══
-async function init() {
-    try {
-        // 從雲端讀取
-        shelves = await dbAll('shelves');
-        folders = await dbAll('folders');
-        notes = await dbAll('notes');
-
-        if (shelves.length === 0) {
-            for (const s of DEFAULT_SHELVES) await dbPut('shelves', s);
-            shelves = DEFAULT_SHELVES;
-        }
-        
-        render(); // 👈 確保這行存在，首頁才會顯示出來
-    } catch (e) {
-        console.error("載入失敗:", e);
-    }
+async function init(){
+  await openDB();
+  shelves=await dbAll('shelves');
+  folders=await dbAll('folders');
+  notes=await dbAll('notes');
+  if(shelves.length===0){for(const s of DEFAULT_SHELVES){await dbPut('shelves',s)};shelves=DEFAULT_SHELVES}
+  render();
 }
 
 function showToast(msg){
