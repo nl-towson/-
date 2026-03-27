@@ -182,17 +182,7 @@ const fmtDate = t => {
     return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`;
 };
 
-  // ═══ 讓 HTML 標籤能讀取到模組內的函式 ═══
-window.switchTab = switchTab;
-window.pushView = pushView;
-window.popView = popView;
-window.addShelf = addShelf; // 如果你有這個函式
-window.addFolder = addFolder;
-window.addNote = addNote;
-window.saveNote = saveNote;
-window.delNote = delNote;
-window.editNote = editNote;
-// ... 把所有在 HTML 中用 onclick 呼叫的函式名稱都寫在這裡
+
   
 // ═══ State ═══
 let shelves=[],folders=[],notes=[];
@@ -635,6 +625,17 @@ function esc(s){if(!s)return'';return s.replace(/&/g,'&amp;').replace(/</g,'&lt;
 if('serviceWorker'in navigator){navigator.serviceWorker.register('./sw.js').catch(()=>{})}
 
 // ═══ Start ═══
+   // ═══ 讓 HTML 標籤能讀取到模組內的函式 ═══
+window.switchTab = switchTab;
+window.pushView = pushView;
+window.popView = popView;
+window.addShelf = addShelf; // 如果你有這個函式
+window.addFolder = addFolder;
+window.addNote = addNote;
+window.saveNote = saveNote;
+window.delNote = delNote;
+window.editNote = editNote;
+// ... 把所有在 HTML 中用 onclick 呼叫的函式名稱都寫在這裡 
 init();
 </script>
 </body>
