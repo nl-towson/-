@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#1A1B1E">
+<link rel="manifest" href="./manifest.json">
+<title>我的知識庫</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{--bg:#1A1B1E;--bg2:#222326;--bg3:#2A2B2F;--fg:#E8E4DC;--fg2:#A09B90;--fg3:#6B6760;--accent:#D4A843;--accent2:#C4956A;--border:#333438;--danger:#E05555;--safe:env(safe-area-inset-bottom,0px)}
+body{font-family:Georgia,'Songti SC','STSong',serif;background:var(--bg);color:var(--fg);min-height:100vh;overflow-x:hidden}
+input,textarea,button{font-family:-apple-system,BlinkMacSystemFont,'PingFang TC','Noto Sans TC',sans-serif}
+input,textarea{width:100%;padding:12px 14px;font-size:15px;border:1px solid var(--border);border-radius:10px;background:var(--bg);color:var(--fg);outline:none;transition:border .2s}
+input:focus,textarea:focus{border-color:var(--accent)}
+textarea{resize:vertical;line-height:1.8;min-height:160px}
+::placeholder{color:var(--fg3)}
+button{cursor:pointer;border:none;background:none;color:var(--fg)}
+img{max-width:100%;border-radius:10px}
+::-webkit-scrollbar{width:3px}::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+
+.app{max-width:520px;margin:0 auto;padding:16px 16px calc(70px + var(--safe));min-height:100vh}
+.tab-bar{position:fixed;bottom:0;left:0;right:0;display:flex;background:var(--bg2);border-top:1px solid var(--border);padding:8px 0 calc(8px + var(--safe));z-index:100}
+.tab{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:4px;font-size:10px;color:var(--fg3);transition:color .2s}
+.tab.active{color:var(--accent)}
+.tab-icon{font-size:22px}
+
+.top-bar{padding:12px 0 16px;border-bottom:1px solid var(--border);margin-bottom:20px}
+.top-label{font-size:11px;color:var(--accent);letter-spacing:3px;font-family:-apple-system,sans-serif;font-weight:600;margin-bottom:6px}
+.top-title{font-size:26px;font-weight:400;letter-spacing:2px}
+.top-sub{font-size:12px;color:var(--fg3);margin-top:6px;font-family:-apple-system,sans-serif}
+
+.search-wrap{position:relative;margin:12px 0 16px}
+.search-wrap input{padding-left:38px}
+.search-icon{position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:14px;color:var(--fg3)}
+.clear-btn{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:var(--bg3);border-radius:50%;width:20px;height:20px;font-size:10px;color:var(--fg2);display:flex;align-items:center;justify-content:center}
+
+.sec-hd{font-size:12px;font-weight:600;color:var(--fg3);margin:24px 0 12px;letter-spacing:2px;font-family:-apple-system,sans-serif;display:flex;justify-content:space-between;align-items:center}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.shelf-card{background:var(--bg2);border-radius:14px;padding:16px 14px;border:1px solid var(--border);transition:all .3s}
+.shelf-card:active{transform:scale(0.97)}
+.shelf-nm{font-size:15px;font-weight:600;color:var(--fg);margin-top:10px;letter-spacing:1px}
+.shelf-mt{font-size:11px;color:var(--fg3);margin-top:3px;font-family:-apple-system,sans-serif}
+.color-bar{width:24px;height:2px;border-radius:1px;margin-top:10px;opacity:.6}
+
+.nav-bar{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;padding:4px 0}
+.nav-btn{font-size:13px;font-weight:500;color:var(--accent);font-family:-apple-system,sans-serif;padding:4px 0}
+.btn-accent{background:var(--accent);color:var(--bg);border-radius:10px;padding:8px 18px;font-size:13px;font-weight:600}
+.btn-ghost{background:rgba(212,168,67,.1);border:1px solid rgba(212,168,67,.3);border-radius:10px;padding:6px 14px;font-size:12px;font-weight:600;color:var(--accent)}
+.btn-danger{background:rgba(224,85,85,.1);border:1px solid rgba(224,85,85,.3);border-radius:10px;padding:6px 14px;font-size:12px;font-weight:600;color:var(--danger)}
+.btn-add{background:rgba(212,168,67,.15);border:1px solid rgba(212,168,67,.3);border-radius:8px;padding:4px 12px;font-size:13px;font-weight:600;color:var(--accent)}
+
+.folder-row{display:flex;align-items:center;justify-content:space-between;padding:14px 12px;border-radius:12px;transition:background .2s}
+.folder-row:active{background:var(--bg3)}
+.note-card{background:var(--bg2);border-radius:12px;padding:14px 16px;border:1px solid var(--border);transition:all .2s;margin-bottom:8px}
+.note-card:active{border-color:var(--accent)}
+.note-title{font-size:14px;font-weight:600;color:var(--fg);line-height:1.4}
+.note-preview{font-size:12px;color:var(--fg3);margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:-apple-system,sans-serif}
+.note-meta{font-size:10px;color:var(--fg3);margin-top:6px;font-family:-apple-system,sans-serif}
+.tag{font-size:10px;color:var(--accent);opacity:.7;font-family:-apple-system,sans-serif}
+.breadcrumb{font-size:10px;color:var(--fg3);margin-bottom:4px;font-family:-apple-system,sans-serif}
+
+.detail-card{background:var(--bg2);border-radius:16px;padding:24px 20px;border:1px solid var(--border)}
+.detail-title{font-size:22px;font-weight:400;letter-spacing:1px;line-height:1.4;margin-bottom:8px}
+.detail-meta{font-size:11px;color:var(--fg3);margin-bottom:16px;font-family:-apple-system,sans-serif}
+.detail-content{font-size:15px;color:var(--fg2);line-height:2;white-space:pre-wrap;word-break:break-word}
+.detail-tag{font-size:11px;color:var(--accent);background:rgba(212,168,67,.1);padding:3px 10px;border-radius:6px;display:inline-block;margin:0 4px 4px 0;font-family:-apple-system,sans-serif}
+.img-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:20px}
+.img-grid img{width:100%;border-radius:12px;object-fit:cover;max-height:240px}
+
+.form-card{background:var(--bg2);border-radius:16px;padding:24px 20px;border:1px solid var(--border)}
+.form-title{font-size:18px;font-weight:400;letter-spacing:1px;margin-bottom:20px}
+.label{display:block;font-size:12px;font-weight:600;color:var(--fg3);margin:16px 0 6px;font-family:-apple-system,sans-serif;letter-spacing:.5px}
+.icon-grid{display:flex;flex-wrap:wrap;gap:6px}
+.icon-btn{width:38px;height:38px;border-radius:8px;border:1px solid var(--border);background:var(--bg);font-size:18px;display:flex;align-items:center;justify-content:center}
+.icon-btn.active{border-color:var(--accent);background:rgba(212,168,67,.1)}
+.color-grid{display:flex;flex-wrap:wrap;gap:8px}
+.color-dot{width:30px;height:30px;border-radius:50%}
+.color-dot.active{outline:2px solid;outline-offset:3px}
+.upload-btn{background:var(--bg3);border:1px dashed var(--border);border-radius:10px;padding:10px 16px;font-size:12px;font-weight:600;color:var(--fg2)}
+.img-preview{display:flex;gap:8px;margin-top:10px;overflow-x:auto}
+.img-preview-wrap{position:relative;flex-shrink:0}
+.img-preview-wrap img{width:64px;height:64px;border-radius:8px;object-fit:cover}
+.img-remove{position:absolute;top:-5px;right:-5px;background:var(--danger);color:#fff;border-radius:50%;width:18px;height:18px;font-size:9px;display:flex;align-items:center;justify-content:center}
+
+.empty{text-align:center;padding:48px 20px}
+.empty-icon{font-size:28px;opacity:.3;margin-bottom:8px}
+.empty-text{color:var(--fg3);font-size:13px;font-family:-apple-system,sans-serif}
+
+.toast{position:fixed;bottom:calc(80px + var(--safe));left:50%;transform:translateX(-50%);background:var(--accent);color:var(--bg);padding:10px 24px;border-radius:12px;font-size:13px;font-weight:600;font-family:-apple-system,sans-serif;box-shadow:0 4px 20px rgba(0,0,0,.3);z-index:999;animation:fadeUp .3s ease}
+@keyframes fadeUp{from{opacity:0;transform:translate(-50%,8px)}to{opacity:1;transform:translate(-50%,0)}}
+
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;z-index:200;backdrop-filter:blur(4px)}
+.modal{background:var(--bg2);border-radius:16px;padding:24px;max-width:300px;width:90%;border:1px solid var(--border)}
+.modal-title{font-size:15px;font-weight:600;margin-bottom:6px}
+.modal-text{font-size:13px;color:var(--fg3);margin-bottom:20px;font-family:-apple-system,sans-serif}
+.modal-actions{display:flex;gap:10px;justify-content:flex-end}
+.modal-cancel{background:var(--bg3);border-radius:10px;padding:8px 18px;font-size:13px;font-weight:600;color:var(--fg2)}
+.modal-del{background:var(--danger);color:#fff;border-radius:10px;padding:8px 18px;font-size:13px;font-weight:600}
+
+/* Hexagram styles */
+.hex-card{background:var(--bg2);border-radius:14px;padding:14px;border:1px solid var(--border);transition:all .3s}
+.hex-card:active{border-color:var(--accent)}
+.hex-nm{font-size:18px;font-weight:600;letter-spacing:1px}
+.hex-info{font-size:11px;color:var(--fg3);font-family:-apple-system,sans-serif}
+.hex-brief{font-size:12px;color:var(--fg2);line-height:1.5;margin-top:8px}
+.luck{font-size:11px;font-weight:600;padding:2px 8px;border-radius:6px;font-family:-apple-system,sans-serif}
+.luck-吉{background:rgba(74,124,41,.15);color:#6AAF3D;border:1px solid rgba(74,124,41,.3)}
+.luck-凶{background:rgba(197,48,48,.15);color:#E05555;border:1px solid rgba(197,48,48,.3)}
+.luck-中{background:rgba(184,134,11,.15);color:#D4A843;border:1px solid rgba(184,134,11,.3)}
+.filter-btn{padding:5px 14px;border-radius:20px;border:1px solid var(--border);font-size:12px;color:var(--fg2);font-family:-apple-system,sans-serif;transition:all .2s}
+.filter-btn.active{background:rgba(212,168,67,.15);color:var(--accent);border-color:var(--accent)}
+.hex-detail{background:var(--bg2);border-radius:16px;padding:24px 20px;border:1px solid var(--border)}
+.hex-sec{margin-bottom:18px}
+.hex-sec-label{font-size:11px;font-weight:600;color:var(--fg3);margin-bottom:8px;letter-spacing:1px;font-family:-apple-system,sans-serif}
+.hex-quote{font-size:16px;color:var(--accent);font-weight:400;line-height:1.8;padding:12px 16px;background:rgba(212,168,67,.06);border-left:2px solid var(--accent);border-radius:0 8px 8px 0;letter-spacing:1px}
+.hex-text{font-size:14px;color:var(--fg2);line-height:1.8}
+.hex-nav{font-size:13px;font-weight:500;color:var(--accent);font-family:-apple-system,sans-serif}
+.result-item{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:12px;background:var(--bg2);border:1px solid var(--border);margin-bottom:8px}
+
+.hidden{display:none!important}
+</style>
+</head>
+<body>
+
+<div class="app" id="app"></div>
+
+<div class="tab-bar">
+  <div class="tab active" onclick="switchTab('home')"><div class="tab-icon">📚</div>知識庫</div>
+  <div class="tab" onclick="switchTab('search')"><div class="tab-icon">🔍</div>搜尋</div>
+  <div class="tab" onclick="switchTab('hex')"><div class="tab-icon">☯️</div>六十四卦</div>
+</div>
+
+<div id="toast" class="toast hidden"></div>
+<div id="modal" class="overlay hidden"></div>
+
+<script>
+// ═══ IndexedDB Storage ═══
+const DB_NAME='KnowledgeBase';const DB_VER=1;
+let db;
+function openDB(){return new Promise((res,rej)=>{const r=indexedDB.open(DB_NAME,DB_VER);r.onupgradeneeded=e=>{const d=e.target.result;if(!d.objectStoreNames.contains('shelves'))d.createObjectStore('shelves',{keyPath:'id'});if(!d.objectStoreNames.contains('folders'))d.createObjectStore('folders',{keyPath:'id'});if(!d.objectStoreNames.contains('notes'))d.createObjectStore('notes',{keyPath:'id'})};r.onsuccess=e=>{db=e.target.result;res(db)};r.onerror=e=>rej(e)})}
+function dbAll(store){return new Promise((res,rej)=>{const tx=db.transaction(store,'readonly');const s=tx.objectStore(store);const r=s.getAll();r.onsuccess=()=>res(r.result);r.onerror=e=>rej(e)})}
+function dbPut(store,data){return new Promise((res,rej)=>{const tx=db.transaction(store,'readwrite');const s=tx.objectStore(store);s.put(data);tx.oncomplete=()=>res();tx.onerror=e=>rej(e)})}
+function dbDel(store,id){return new Promise((res,rej)=>{const tx=db.transaction(store,'readwrite');tx.objectStore(store).delete(id);tx.oncomplete=()=>res();tx.onerror=e=>rej(e)})}
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+const fmtDate=t=>{const d=new Date(t);return`${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`};
+
+// ═══ State ═══
+let shelves=[],folders=[],notes=[];
+let currentTab='home',viewStack=[],toast_timer;
+
+const DEFAULT_SHELVES=[
+  {id:'tcm',icon:'🏥',name:'中醫',color:'#C4956A',order:0},
+  {id:'health',icon:'💊',name:'養生保健',color:'#6AAF3D',order:1},
+  {id:'recipe',icon:'🍳',name:'食譜',color:'#E0825A',order:2},
+  {id:'study',icon:'📖',name:'學習',color:'#5B9BD5',order:3},
+  {id:'work',icon:'💼',name:'工作',color:'#8B7EC8',order:4},
+  {id:'life',icon:'🌿',name:'生活',color:'#5BAF8B',order:5},
+  {id:'other',icon:'📁',name:'其他',color:'#8899AA',order:6},
+];
+
+// ═══ Init ═══
+async function init(){
+  await openDB();
+  shelves=await dbAll('shelves');
+  folders=await dbAll('folders');
+  notes=await dbAll('notes');
+  if(shelves.length===0){for(const s of DEFAULT_SHELVES){await dbPut('shelves',s)};shelves=DEFAULT_SHELVES}
+  render();
+}
+
+function showToast(msg){
+  const el=document.getElementById('toast');
+  el.textContent=msg;el.classList.remove('hidden');
+  clearTimeout(toast_timer);toast_timer=setTimeout(()=>el.classList.add('hidden'),2000);
+}
+
+function showModal(title,text,onConfirm){
+  const el=document.getElementById('modal');
+  el.innerHTML=`<div class="modal"><div class="modal-title">${title}</div><div class="modal-text">${text}</div><div class="modal-actions"><button class="modal-cancel" onclick="closeModal()">取消</button><button class="modal-del" id="modal-ok">刪除</button></div></div>`;
+  el.classList.remove('hidden');
+  document.getElementById('modal-ok').onclick=()=>{closeModal();onConfirm()};
+  el.onclick=e=>{if(e.target===el)closeModal()};
+}
+function closeModal(){document.getElementById('modal').classList.add('hidden')}
+
+// ═══ Tab switching ═══
+function switchTab(tab){
+  currentTab=tab;viewStack=[];
+  document.querySelectorAll('.tab').forEach((t,i)=>{t.classList.toggle('active',['home','search','hex'][i]===tab)});
+  render();
+}
+
+// ═══ Navigation ═══
+function pushView(view,data){viewStack.push({view,data});render()}
+function popView(){viewStack.pop();render()}
+function currentView(){return viewStack.length?viewStack[viewStack.length-1]:{view:currentTab,data:{}}}
+
+// ═══ Render ═══
+function render(){
+  const app=document.getElementById('app');
+  const cv=currentView();
+  switch(cv.view){
+    case'home':app.innerHTML=renderHome();break;
+    case'search':app.innerHTML=renderSearch();break;
+    case'hex':app.innerHTML=renderHexList();break;
+    case'shelf':app.innerHTML=renderShelf(cv.data);break;
+    case'folder':app.innerHTML=renderFolder(cv.data);break;
+    case'note':app.innerHTML=renderNote(cv.data);break;
+    case'editNote':app.innerHTML=renderEditNote(cv.data);break;
+    case'editFolder':app.innerHTML=renderEditFolder(cv.data);break;
+    case'editShelf':app.innerHTML=renderEditShelf(cv.data);break;
+    case'hexDetail':app.innerHTML=renderHexDetail(cv.data);break;
+  }
+}
+
+// ═══ Home ═══
+function renderHome(){
+  const recentNotes=[...notes].sort((a,b)=>b.updatedAt-a.updatedAt).slice(0,5);
+  return`
+    <div class="top-bar">
+      <div class="top-label">KNOWLEDGE BASE</div>
+      <div class="top-title">我的知識庫</div>
+      <div class="top-sub">${notes.length} 筆資料 · ${folders.length} 個分冊 · ${shelves.length} 個書架</div>
+    </div>
+    <div class="sec-hd"><span>書 架</span><button class="btn-add" onclick="pushView('editShelf',{})">＋</button></div>
+    <div class="grid-2">${shelves.map(s=>{
+      const fc=folders.filter(f=>f.shelfId===s.id).length;
+      const nc=notes.filter(n=>folders.filter(f=>f.shelfId===s.id).map(f=>f.id).includes(n.folderId)).length;
+      return`<div class="shelf-card" onclick="pushView('shelf',{id:'${s.id}'})">
+        <div style="display:flex;justify-content:space-between"><span style="font-size:26px">${s.icon}</span><button class="nav-btn" style="font-size:14px;color:var(--fg3)" onclick="event.stopPropagation();pushView('editShelf',{id:'${s.id}'})">⋯</button></div>
+        <div class="shelf-nm">${s.name}</div>
+        <div class="shelf-mt">${fc} 冊 · ${nc} 筆</div>
+        <div class="color-bar" style="background:${s.color}"></div>
+      </div>`}).join('')}</div>
+    ${recentNotes.length?`<div class="sec-hd">最近更新</div>${recentNotes.map(n=>renderNoteCard(n,true)).join('')}`:''}
+  `;
+}
+
+function renderNoteCard(n,showBc=false){
+  const f=folders.find(x=>x.id===n.folderId);
+  const s=f?shelves.find(x=>x.id===f.shelfId):null;
+  const hasImg=n.images&&n.images.length>0;
+  return`<div class="note-card" onclick="pushView('note',{id:'${n.id}'})">
+    <div style="display:flex;gap:12px">
+      <div style="flex:1;min-width:0">
+        ${showBc&&s&&f?`<div class="breadcrumb">${s.icon} ${s.name} › ${f.icon} ${f.name}</div>`:''}
+        <div class="note-title">${esc(n.title)}</div>
+        ${n.content?`<div class="note-preview">${esc(n.content.slice(0,80))}</div>`:''}
+        <div class="note-meta">${fmtDate(n.updatedAt)} ${(n.tags||[]).slice(0,2).map(t=>`<span class="tag">#${esc(t)}</span>`).join(' ')}</div>
+      </div>
+      ${hasImg?`<img src="${n.images[0]}" style="width:52px;height:52px;border-radius:8px;object-fit:cover;flex-shrink:0;opacity:.9">`:''}
+    </div>
+  </div>`;
+}
+
+// ═══ Shelf ═══
+function renderShelf(data){
+  const s=shelves.find(x=>x.id===data.id);if(!s)return'';
+  const myFolders=folders.filter(f=>f.shelfId===s.id);
+  return`
+    <div class="nav-bar"><button class="nav-btn" onclick="popView()">← 知識庫</button><button class="btn-add" onclick="pushView('editFolder',{shelfId:'${s.id}'})">＋</button></div>
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px"><span style="font-size:30px">${s.icon}</span><div><div style="font-size:22px;font-weight:400;letter-spacing:1px">${s.name}</div><div style="font-size:11px;color:var(--fg3);font-family:-apple-system,sans-serif">${myFolders.length} 個分冊</div></div></div>
+    ${myFolders.length===0?'<div class="empty"><div class="empty-icon">空</div><div class="empty-text">點右上角 ＋ 新增分冊</div></div>':
+    myFolders.map(f=>{const cnt=notes.filter(n=>n.folderId===f.id).length;return`
+      <div class="folder-row" onclick="pushView('folder',{id:'${f.id}'})">
+        <div style="display:flex;align-items:center;gap:12px"><span style="font-size:22px">${f.icon}</span><div><div style="font-size:15px;font-weight:600">${f.name}</div><div style="font-size:11px;color:var(--fg3);font-family:-apple-system,sans-serif">${cnt} 筆</div></div></div>
+        <div style="display:flex;align-items:center;gap:8px"><button style="color:var(--fg3);font-size:14px" onclick="event.stopPropagation();pushView('editFolder',{id:'${f.id}',shelfId:'${s.id}'})">⋯</button><span style="color:var(--fg3)">›</span></div>
+      </div>`}).join('')}
+  `;
+}
+
+// ═══ Folder ═══
+function renderFolder(data){
+  const f=folders.find(x=>x.id===data.id);if(!f)return'';
+  const s=shelves.find(x=>x.id===f.shelfId);
+  const myNotes=notes.filter(n=>n.folderId===f.id).sort((a,b)=>b.updatedAt-a.updatedAt);
+  return`
+    <div class="nav-bar"><button class="nav-btn" onclick="popView()">← ${s?s.name:'返回'}</button><button class="btn-add" onclick="pushView('editNote',{folderId:'${f.id}'})">＋</button></div>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px"><span style="font-size:26px">${f.icon}</span><div style="font-size:20px;font-weight:400;letter-spacing:1px">${f.name}</div></div>
+    ${myNotes.length===0?'<div class="empty"><div class="empty-icon">空</div><div class="empty-text">點右上角 ＋ 新增資料</div></div>':
+    myNotes.map(n=>renderNoteCard(n)).join('')}
+  `;
+}
+
+// ═══ Note Detail ═══
+function renderNote(data){
+  const n=notes.find(x=>x.id===data.id);if(!n)return'';
+  const f=folders.find(x=>x.id===n.folderId);
+  return`
+    <div class="nav-bar"><button class="nav-btn" onclick="popView()">← ${f?f.name:'返回'}</button>
+      <div style="display:flex;gap:6px"><button class="btn-ghost" onclick="pushView('editNote',{id:'${n.id}',folderId:'${n.folderId}'})">編輯</button><button class="btn-danger" onclick="confirmDelNote('${n.id}')">刪除</button></div>
+    </div>
+    <div class="detail-card">
+      <div class="detail-title">${esc(n.title)}</div>
+      <div class="detail-meta">建立 ${fmtDate(n.createdAt)} · 更新 ${fmtDate(n.updatedAt)}</div>
+      ${(n.tags||[]).length?`<div style="margin-bottom:16px">${n.tags.map(t=>`<span class="detail-tag">#${esc(t)}</span>`).join('')}</div>`:''}
+      <div class="detail-content">${esc(n.content)}</div>
+      ${(n.images||[]).length?`<div class="img-grid">${n.images.map(src=>`<img src="${src}" onclick="window.open(this.src)">`).join('')}</div>`:''}
+    </div>`;
+}
+
+// ═══ Search ═══
+function renderSearch(){
+  return`
+    <div class="top-bar"><div class="top-label">SEARCH</div><div class="top-title">全局搜尋</div></div>
+    <div class="search-wrap"><span class="search-icon">⌕</span><input id="globalSearch" placeholder="搜尋書架、分冊、筆記內容⋯" oninput="updateSearch()"></div>
+    <div id="searchResults"></div>`;
+}
+function updateSearch(){
+  const q=document.getElementById('globalSearch').value.toLowerCase();
+  const el=document.getElementById('searchResults');
+  if(!q.trim()){el.innerHTML='<div class="empty"><div class="empty-icon">🔍</div><div class="empty-text">輸入關鍵字開始搜尋</div></div>';return}
+  const mSh=shelves.filter(s=>s.name.toLowerCase().includes(q));
+  const mFo=folders.filter(f=>f.name.toLowerCase().includes(q));
+  const mNo=notes.filter(n=>n.title.toLowerCase().includes(q)||n.content.toLowerCase().includes(q)||(n.tags||[]).some(t=>t.toLowerCase().includes(q)));
+  const total=mSh.length+mFo.length+mNo.length;
+  if(!total){el.innerHTML='<div class="empty"><div class="empty-icon">空</div><div class="empty-text">找不到任何結果</div></div>';return}
+  let html=`<div class="sec-hd">搜尋結果（${total}）</div>`;
+  mSh.forEach(s=>{html+=`<div class="result-item" onclick="switchTab('home');pushView('shelf',{id:'${s.id}'})"><span style="font-size:20px">${s.icon}</span><div><div style="font-size:14px;font-weight:600">${s.name}</div><div style="font-size:11px;color:var(--fg3);font-family:-apple-system,sans-serif">書架</div></div></div>`});
+  mFo.forEach(f=>{const s=shelves.find(x=>x.id===f.shelfId);html+=`<div class="result-item" onclick="switchTab('home');pushView('shelf',{id:'${f.shelfId}'});pushView('folder',{id:'${f.id}'})"><span style="font-size:20px">${f.icon}</span><div><div style="font-size:14px;font-weight:600">${f.name}</div><div style="font-size:11px;color:var(--fg3);font-family:-apple-system,sans-serif">${s?s.icon+' '+s.name+' 中的分冊':'分冊'}</div></div></div>`});
+  mNo.forEach(n=>{html+=renderNoteCard(n,true)});
+  el.innerHTML=html;
+}
+
+// ═══ Edit Note ═══
+let editImages=[];
+function renderEditNote(data){
+  const existing=data.id?notes.find(x=>x.id===data.id):null;
+  editImages=existing?[...(existing.images||[])]:[];
+  return`
+    <div class="nav-bar"><button class="nav-btn" onclick="popView()">← 取消</button><button class="btn-accent" onclick="saveNote('${data.id||''}','${data.folderId||''}')">儲存</button></div>
+    <div class="form-card">
+      <div class="form-title">${existing?'編輯資料':'新增資料'}</div>
+      <div class="label">標題</div><input id="noteTitle" value="${existing?esc(existing.title):''}" placeholder="輸入標題⋯">
+      <div class="label">內容</div><textarea id="noteContent" placeholder="輸入內容⋯">${existing?esc(existing.content):''}</textarea>
+      <div class="label">圖片</div>
+      <div style="display:flex;align-items:center;gap:10px"><button class="upload-btn" onclick="document.getElementById('imgInput').click()">📷 選擇圖片</button><span style="font-size:11px;color:var(--fg3)">JPG/PNG · ≤ 4MB</span></div>
+      <input type="file" id="imgInput" accept="image/*" multiple onchange="handleImgUpload(this)" style="display:none">
+      <div class="img-preview" id="imgPreview">${renderImgPreviews()}</div>
+      <div class="label">標籤 <span style="font-weight:400;color:var(--fg3)">（逗號分隔）</span></div>
+      <input id="noteTags" value="${existing?(existing.tags||[]).join('、'):''}" placeholder="例：傷寒論、太陽病">
+    </div>`;
+}
+function renderImgPreviews(){return editImages.map((src,i)=>`<div class="img-preview-wrap"><img src="${src}"><button class="img-remove" onclick="removeEditImg(${i})">✕</button></div>`).join('')}
+function handleImgUpload(input){
+  Array.from(input.files).forEach(file=>{
+    if(file.size>4*1024*1024){showToast('⚠ 圖片需小於4MB');return}
+    const reader=new FileReader();
+    reader.onload=e=>{editImages.push(e.target.result);document.getElementById('imgPreview').innerHTML=renderImgPreviews()};
+    reader.readAsDataURL(file);
+  });input.value='';
+}
+function removeEditImg(i){editImages.splice(i,1);document.getElementById('imgPreview').innerHTML=renderImgPreviews()}
+async function saveNote(id,folderId){
+  const title=document.getElementById('noteTitle').value.trim();
+  if(!title){showToast('請輸入標題');return}
+  const content=document.getElementById('noteContent').value;
+  const tags=document.getElementById('noteTags').value.split(/[,，、]/).map(t=>t.trim()).filter(Boolean);
+  const now=Date.now();
+  if(id){
+    const idx=notes.findIndex(n=>n.id===id);
+    if(idx>=0){notes[idx]={...notes[idx],title,content,tags,images:editImages,updatedAt:now};await dbPut('notes',notes[idx])}
+    showToast('✓ 已更新');
+  }else{
+    const n={id:uid(),folderId:folderId,title,content,tags,images:editImages,createdAt:now,updatedAt:now};
+    notes.unshift(n);await dbPut('notes',n);
+    showToast('✓ 已新增');
+  }
+  popView();
+}
+function confirmDelNote(id){showModal('確認刪除？','此操作無法還原',async()=>{notes=notes.filter(n=>n.id!==id);await dbDel('notes',id);showToast('✓ 已刪除');popView()})}
+
+// ═══ Edit Folder ═══
+const FOLDER_ICONS=["📄","📕","📗","📘","📙","📓","📔","📒","🗂","📑","🧾","💡","🔬","🧪","🫀","🧠","🦴","🌿","🍵","💉"];
+function renderEditFolder(data){
+  const existing=data.id?folders.find(x=>x.id===data.id):null;
+  return`
+    <div class="nav-bar"><button class="nav-btn" onclick="popView()">← 取消</button>
+      <div style="display:flex;gap:6px">${existing?`<button class="btn-danger" onclick="confirmDelFolder('${existing.id}')">刪除</button>`:''}<button class="btn-accent" onclick="saveFolder('${data.id||''}','${data.shelfId}')">儲存</button></div>
+    </div>
+    <div class="form-card">
+      <div class="form-title">${existing?'編輯分冊':'新增分冊'}</div>
+      <div class="label">圖示</div><div class="icon-grid">${FOLDER_ICONS.map(ic=>`<button class="icon-btn ${(existing?existing.icon:'📄')===ic?'active':''}" onclick="selectFolderIcon(this,'${ic}')">${ic}</button>`).join('')}</div>
+      <input type="hidden" id="folderIcon" value="${existing?existing.icon:'📄'}">
+      <div class="label">名稱</div><input id="folderName" value="${existing?esc(existing.name):''}" placeholder="例：傷寒論">
+    </div>`;
+}
+function selectFolderIcon(el,ic){document.querySelectorAll('.form-card .icon-btn').forEach(b=>b.classList.remove('active'));el.classList.add('active');document.getElementById('folderIcon').value=ic}
+async function saveFolder(id,shelfId){
+  const name=document.getElementById('folderName').value.trim();
+  if(!name){showToast('請輸入名稱');return}
+  const icon=document.getElementById('folderIcon').value;
+  if(id){
+    const idx=folders.findIndex(f=>f.id===id);
+    if(idx>=0){folders[idx]={...folders[idx],name,icon};await dbPut('folders',folders[idx])}
+    showToast('✓ 已更新');
+  }else{
+    const f={id:uid(),shelfId,name,icon};folders.push(f);await dbPut('folders',f);
+    showToast('✓ 已新增');
+  }
+  popView();
+}
+function confirmDelFolder(id){showModal('確認刪除？','分冊下所有資料將一併刪除',async()=>{const delNotes=notes.filter(n=>n.folderId===id);for(const n of delNotes)await dbDel('notes',n.id);notes=notes.filter(n=>n.folderId!==id);folders=folders.filter(f=>f.id!==id);await dbDel('folders',id);showToast('✓ 已刪除');popView()})}
+
+// ═══ Edit Shelf ═══
+const SHELF_ICONS=["🏥","💊","📖","💼","🌿","🍳","🎵","🎨","✈️","📁","☯️","🔮","🧬","🫀","🧠","⚕️","🏠","💡","🔬","📚"];
+const SHELF_COLORS=["#C4956A","#6AAF3D","#E0825A","#5B9BD5","#8B7EC8","#5BAF8B","#8899AA","#D4A843","#E05555","#B07EC8","#5BAFAF","#AF5B5B"];
+function renderEditShelf(data){
+  const existing=data.id?shelves.find(x=>x.id===data.id):null;
+  return`
+    <div class="nav-bar"><button class="nav-btn" onclick="popView()">← 取消</button>
+      <div style="display:flex;gap:6px">${existing?`<button class="btn-danger" onclick="confirmDelShelf('${existing.id}')">刪除</button>`:''}<button class="btn-accent" onclick="saveShelf('${data.id||''}')">儲存</button></div>
+    </div>
+    <div class="form-card">
+      <div class="form-title">${existing?'編輯書架':'新增書架'}</div>
+      <div class="label">圖示</div><div class="icon-grid">${SHELF_ICONS.map(ic=>`<button class="icon-btn ${(existing?existing.icon:'📁')===ic?'active':''}" onclick="selectShelfIcon(this,'${ic}')">${ic}</button>`).join('')}</div>
+      <input type="hidden" id="shelfIcon" value="${existing?existing.icon:'📁'}">
+      <div class="label">名稱</div><input id="shelfName" value="${existing?esc(existing.name):''}" placeholder="例：中醫">
+      <div class="label">顏色</div><div class="color-grid">${SHELF_COLORS.map(c=>`<button class="color-dot ${(existing?existing.color:'#C4956A')===c?'active':''}" style="background:${c};${(existing?existing.color:'#C4956A')===c?'outline-color:'+c:''}" onclick="selectShelfColor(this,'${c}')"></button>`).join('')}</div>
+      <input type="hidden" id="shelfColor" value="${existing?existing.color:'#C4956A'}">
+    </div>`;
+}
+function selectShelfIcon(el,ic){document.querySelectorAll('.form-card .icon-btn').forEach(b=>b.classList.remove('active'));el.classList.add('active');document.getElementById('shelfIcon').value=ic}
+function selectShelfColor(el,c){document.querySelectorAll('.color-dot').forEach(b=>{b.classList.remove('active');b.style.outlineColor=''});el.classList.add('active');el.style.outlineColor=c;document.getElementById('shelfColor').value=c}
+async function saveShelf(id){
+  const name=document.getElementById('shelfName').value.trim();
+  if(!name){showToast('請輸入名稱');return}
+  const icon=document.getElementById('shelfIcon').value;
+  const color=document.getElementById('shelfColor').value;
+  if(id){
+    const idx=shelves.findIndex(s=>s.id===id);
+    if(idx>=0){shelves[idx]={...shelves[idx],name,icon,color};await dbPut('shelves',shelves[idx])}
+    showToast('✓ 已更新');
+  }else{
+    const s={id:uid(),name,icon,color,order:shelves.length};shelves.push(s);await dbPut('shelves',s);
+    showToast('✓ 已新增');
+  }
+  popView();
+}
+async function confirmDelShelf(id){showModal('確認刪除？','書架下所有分冊與資料將一併刪除',async()=>{const fids=folders.filter(f=>f.shelfId===id).map(f=>f.id);const delNotes=notes.filter(n=>fids.includes(n.folderId));for(const n of delNotes)await dbDel('notes',n.id);for(const fid of fids)await dbDel('folders',fid);notes=notes.filter(n=>!fids.includes(n.folderId));folders=folders.filter(f=>f.shelfId!==id);shelves=shelves.filter(s=>s.id!==id);await dbDel('shelves',id);showToast('✓ 已刪除');popView()})}
+
+// ═══ 64 Hexagrams ═══
+const TG={qian:{n:"乾",e:"天"},kun:{n:"坤",e:"地"},zhen:{n:"震",e:"雷"},xun:{n:"巽",e:"風"},kan:{n:"坎",e:"水"},li:{n:"離",e:"火"},gen:{n:"艮",e:"山"},dui:{n:"兌",e:"澤"}};
+const TGL={qian:[1,1,1],kun:[0,0,0],zhen:[0,0,1],xun:[1,1,0],kan:[0,1,0],li:[1,0,1],gen:[1,0,0],dui:[0,1,1]};
+function hexSvg(u,d,s=24){const lines=[...TGL[u],...TGL[d]];const w=s,h=s/8,g=s/7;let y=0;let svg='';lines.forEach(v=>{if(v===1)svg+=`<rect x="0" y="${y}" width="${w}" height="${h}" rx="1" fill="var(--fg)"/>`;else{const hw=(w-4)/2;svg+=`<rect x="0" y="${y}" width="${hw}" height="${h}" rx="1" fill="var(--fg)"/><rect x="${hw+4}" y="${y}" width="${hw}" height="${h}" rx="1" fill="var(--fg)"/>`}y+=h+g});return`<svg width="${w}" height="${y-g}" viewBox="0 0 ${w} ${y-g}"xmlns="http://www.w3.org/2000/svg">${svg}</svg>`}
+
+const HX=[
+{n:1,nm:"乾",u:"qian",d:"qian",lk:"吉",br:"純陽剛健，自強不息",ci:"乾。元亨利貞。",yi:"純陽至剛，代表天道、君王。象徵創始、開拓、剛健進取之力。宜積極進取，但需警惕「亢龍有悔」，過剛則折。",ad:"積極進取，保持正道，切勿剛愎自用。",rl:"對宮：坤卦，綜卦：乾卦，錯卦：坤卦"},
+{n:2,nm:"坤",u:"kun",d:"kun",lk:"吉",br:"純陰柔順，厚德載物",ci:"坤。元亨，利牝馬之貞。",yi:"至柔至順，代表大地、母親。象徵承載、包容、順從之德。以柔克剛，厚積薄發。",ad:"順勢而為，厚積薄發，以柔克剛。",rl:"對宮：乾卦，綜卦：坤卦，錯卦：乾卦"},
+{n:3,nm:"屯",u:"kan",d:"zhen",lk:"中",br:"萬物初生，創業維艱",ci:"屯。元亨利貞，勿用有攸往。",yi:"水雷屯，萬物初生之象。如同草木破土，雖充滿生機但阻礙重重。",ad:"創業維艱需耐心，宜廣結善緣。",rl:"對宮：鼎卦，綜卦：蒙卦"},
+{n:4,nm:"蒙",u:"gen",d:"kan",lk:"吉",br:"啟蒙教育，循序漸進",ci:"蒙。亨。匪我求童蒙，童蒙求我。",yi:"山水蒙，山下有泉。象徵蒙昧初開，需要啟發教育。",ad:"虛心求教，循序漸進。",rl:"對宮：革卦，綜卦：屯卦"},
+{n:5,nm:"需",u:"kan",d:"qian",lk:"吉",br:"等待時機，蓄勢待發",ci:"需。有孚，光亨，貞吉。",yi:"水天需，象徵等待。非消極等待，而是積極準備。",ad:"耐心等待，充實自身實力。",rl:"對宮：晉卦，綜卦：訟卦"},
+{n:6,nm:"訟",u:"qian",d:"kan",lk:"凶",br:"爭訟紛爭，宜和不宜戰",ci:"訟。有孚窒惕，中吉，終凶。",yi:"天水訟，方向相背離。凡事不宜過分爭執。",ad:"避免爭訟，退一步海闊天空。",rl:"對宮：明夷卦，綜卦：需卦"},
+{n:7,nm:"師",u:"kun",d:"kan",lk:"中",br:"統兵用師，以正治眾",ci:"師。貞，丈人吉，無咎。",yi:"地水師，象徵用兵之道，領導者需德才兼備。",ad:"以正道領導眾人，選賢任能。",rl:"對宮：同人卦，綜卦：比卦"},
+{n:8,nm:"比",u:"kan",d:"kun",lk:"吉",br:"親附團結，和衷共濟",ci:"比。吉。原筮元永貞，無咎。",yi:"水地比，水與地相親相依。象徵親近、團結。",ad:"廣結善緣，真誠待人。",rl:"對宮：大有卦，綜卦：師卦"},
+{n:9,nm:"小畜",u:"xun",d:"qian",lk:"吉",br:"小有積蓄，循序漸進",ci:"小畜。亨，密雲不雨。",yi:"風天小畜，有雲但尚未成雨。力量尚小，需耐心。",ad:"量力而行，逐步積累。",rl:"對宮：豫卦，綜卦：履卦"},
+{n:10,nm:"履",u:"qian",d:"dui",lk:"中",br:"如履虎尾，謹慎守禮",ci:"履虎尾，不咥人，亨。",yi:"天澤履，以柔踐剛。在危險中謹慎行事。",ad:"謹言慎行，以禮待人。",rl:"對宮：謙卦，綜卦：小畜卦"},
+{n:11,nm:"泰",u:"kun",d:"qian",lk:"吉",br:"天地交泰，國泰民安",ci:"泰。小往大來，吉亨。",yi:"地天泰，陰陽交感，萬物通泰。象徵太平盛世。",ad:"居安思危，盛極必衰。",rl:"對宮：否卦，綜卦：否卦"},
+{n:12,nm:"否",u:"qian",d:"kun",lk:"凶",br:"天地不交，閉塞不通",ci:"否之匪人，不利君子貞。",yi:"天地否，陰陽不交，萬物閉塞。君子應韜光養晦。",ad:"韜光養晦，否極泰來。",rl:"對宮：泰卦，綜卦：泰卦"},
+{n:13,nm:"同人",u:"qian",d:"li",lk:"吉",br:"志同道合，團結一心",ci:"同人于野，亨。",yi:"天火同人，光明普照。以公心待人。",ad:"以誠待人，求同存異。",rl:"對宮：師卦，綜卦：大有卦"},
+{n:14,nm:"大有",u:"li",d:"qian",lk:"吉",br:"豐收大有，事業鼎盛",ci:"大有。元亨。",yi:"火天大有，光明遍照。功成名就時更需謙虛。",ad:"功成不居，以德服人。",rl:"對宮：比卦，綜卦：同人卦"},
+{n:15,nm:"謙",u:"kun",d:"gen",lk:"吉",br:"功成不居，六爻皆吉",ci:"謙。亨，君子有終。",yi:"地山謙，六十四卦中唯一六爻皆吉之卦。",ad:"謙虛為懷，越成功越要低調。",rl:"對宮：履卦，綜卦：豫卦"},
+{n:16,nm:"豫",u:"zhen",d:"kun",lk:"吉",br:"和樂愉悅，順時而動",ci:"豫。利建侯行師。",yi:"雷地豫，萬物歡欣。順應天時而行動。",ad:"順勢而為，不可過分安逸。",rl:"對宮：小畜卦，綜卦：謙卦"},
+{n:17,nm:"隨",u:"dui",d:"zhen",lk:"吉",br:"隨順時勢，擇善而從",ci:"隨。元亨利貞，無咎。",yi:"澤雷隨，順時而動。擇善而從，隨機應變。",ad:"順應大勢，靈活變通。",rl:"對宮：蠱卦"},
+{n:18,nm:"蠱",u:"gen",d:"xun",lk:"中",br:"整治弊端，撥亂反正",ci:"蠱。元亨，利涉大川。",yi:"山風蠱，事物敗壞需要整治。",ad:"勇於改革，不可因循守舊。",rl:"對宮：隨卦"},
+{n:19,nm:"臨",u:"kun",d:"dui",lk:"吉",br:"居高臨下，以德臨民",ci:"臨。元亨利貞。",yi:"地澤臨，居高臨下。需以仁德感化。",ad:"寬厚待人，防範盛極而衰。",rl:"對宮：遯卦，綜卦：觀卦"},
+{n:20,nm:"觀",u:"xun",d:"kun",lk:"中",br:"觀察審視，修身正己",ci:"觀。盥而不薦，有孚顒若。",yi:"風地觀，象徵觀察、省視。",ad:"修身正己，以身作則。",rl:"對宮：大壯卦，綜卦：臨卦"},
+{n:21,nm:"噬嗑",u:"li",d:"zhen",lk:"中",br:"明罰敕法，除惡務盡",ci:"噬嗑。亨，利用獄。",yi:"火雷噬嗑，象徵以刑罰除障礙。",ad:"明辨是非，公正執法。",rl:"對宮：井卦"},
+{n:22,nm:"賁",u:"gen",d:"li",lk:"吉",br:"文飾修養，質樸為本",ci:"賁。亨，小利有攸往。",yi:"山火賁，象徵文飾。外在美需以內在質樸為根本。",ad:"注重內在修養，文質彬彬。",rl:"對宮：困卦"},
+{n:23,nm:"剝",u:"gen",d:"kun",lk:"凶",br:"陰盛陽衰，宜守不宜進",ci:"剝。不利有攸往。",yi:"山地剝，根基剝落。象徵衰敗。",ad:"韜光養晦，靜待否極泰來。",rl:"對宮：夬卦，綜卦：復卦"},
+{n:24,nm:"復",u:"kun",d:"zhen",lk:"吉",br:"一陽復始，生機再現",ci:"復。亨。出入無疾。",yi:"地雷復，陽氣初動。否極泰來之始。",ad:"把握新的開始，回歸正道。",rl:"對宮：姤卦，綜卦：剝卦"},
+{n:25,nm:"無妄",u:"qian",d:"zhen",lk:"吉",br:"真實無妄，順應天道",ci:"無妄。元亨利貞。",yi:"天雷無妄，萬物順應自然。",ad:"行事正直，順其自然。",rl:"對宮：升卦"},
+{n:26,nm:"大畜",u:"gen",d:"qian",lk:"吉",br:"厚積薄發，養精蓄銳",ci:"大畜。利貞，不家食吉。",yi:"山天大畜，象徵大量積蓄。",ad:"充實自己，厚積薄發。",rl:"對宮：萃卦"},
+{n:27,nm:"頤",u:"gen",d:"zhen",lk:"中",br:"頤養身心，修身養性",ci:"頤。貞吉。觀頤，自求口實。",yi:"山雷頤，象徵頤養。言語謹慎，飲食有節。",ad:"注重養生，謹言慎行。",rl:"對宮：大過卦"},
+{n:28,nm:"大過",u:"dui",d:"xun",lk:"凶",br:"棟樑橈曲，需知進退",ci:"大過。棟橈，利有攸往。",yi:"澤風大過，象徵過度。非常之時需非常之策。",ad:"認清形勢，量力而行。",rl:"對宮：頤卦"},
+{n:29,nm:"坎",u:"kan",d:"kan",lk:"凶",br:"重重險難，以誠心突破",ci:"習坎。有孚，維心亨。",yi:"坎為水，重重險陷。以誠信和堅持度過難關。",ad:"堅定信念，終能突破。",rl:"對宮：離卦"},
+{n:30,nm:"離",u:"li",d:"li",lk:"吉",br:"光明依附，文明禮教",ci:"離。利貞，亨。",yi:"離為火，光明相繼。依附正道方可光明。",ad:"依附正道，修明德行。",rl:"對宮：坎卦"},
+{n:31,nm:"咸",u:"dui",d:"gen",lk:"吉",br:"感應相通，誠心感人",ci:"咸。亨，利貞，取女吉。",yi:"澤山咸，天地萬物以真誠相感而生生不息。",ad:"以誠待人，情真意切。",rl:"對宮：損卦"},
+{n:32,nm:"恆",u:"zhen",d:"xun",lk:"吉",br:"持之以恆，始終如一",ci:"恆。亨，無咎，利貞。",yi:"雷風恆，長久不息。做事貴在持之以恆。",ad:"持之以恆，守正方得長久。",rl:"對宮：益卦"},
+{n:33,nm:"遯",u:"qian",d:"gen",lk:"中",br:"退避隱遁，明智退讓",ci:"遯。亨，小利貞。",yi:"天山遯，象徵明智的策略性撤退。",ad:"識時務者為俊傑，以退為進。",rl:"對宮：臨卦"},
+{n:34,nm:"大壯",u:"zhen",d:"qian",lk:"吉",br:"剛強壯盛，宜守正道",ci:"大壯。利貞。",yi:"雷天大壯，過壯則折，需以正道約束。",ad:"力量強大時更需守正。",rl:"對宮：觀卦"},
+{n:35,nm:"晉",u:"li",d:"kun",lk:"吉",br:"光明上進，前途光明",ci:"晉。康侯用錫馬蕃庶。",yi:"火地晉，日出地上。象徵晉升、進步。",ad:"把握機遇，積極進取。",rl:"對宮：需卦"},
+{n:36,nm:"明夷",u:"kun",d:"li",lk:"凶",br:"光明受損，韜光養晦",ci:"明夷。利艱貞。",yi:"地火明夷，日入地中。處逆境時需韜光養晦。",ad:"內心光明而外在隱晦。",rl:"對宮：訟卦"},
+{n:37,nm:"家人",u:"xun",d:"li",lk:"吉",br:"齊家治國，家和萬事興",ci:"家人。利女貞。",yi:"風火家人，象徵家庭和睦之道。",ad:"修身齊家，以身作則。",rl:"對宮：解卦"},
+{n:38,nm:"睽",u:"li",d:"dui",lk:"中",br:"背離乖異，求同存異",ci:"睽。小事吉。",yi:"火澤睽，方向相反。異中有同。",ad:"求同存異，包容差異。",rl:"對宮：蹇卦"},
+{n:39,nm:"蹇",u:"kan",d:"gen",lk:"凶",br:"行路艱難，另尋出路",ci:"蹇。利西南，不利東北。",yi:"水山蹇，道路險阻。需反省自身。",ad:"退而修德，尋求貴人相助。",rl:"對宮：睽卦"},
+{n:40,nm:"解",u:"zhen",d:"kan",lk:"吉",br:"困難解除，化險為夷",ci:"解。利西南。",yi:"雷水解，萬物舒展。困難解除。",ad:"困難解除後宜速歸正道。",rl:"對宮：家人卦"},
+{n:41,nm:"損",u:"gen",d:"dui",lk:"中",br:"適當犧牲，以退為進",ci:"損。有孚，元吉。",yi:"山澤損，有時需犧牲眼前利益換取長遠發展。",ad:"適當捨棄，以損求益。",rl:"對宮：咸卦"},
+{n:42,nm:"益",u:"xun",d:"zhen",lk:"吉",br:"損上益下，大好時機",ci:"益。利有攸往。",yi:"風雷益，萬物增益。天下歸心。",ad:"把握時機，利人利己。",rl:"對宮：恆卦"},
+{n:43,nm:"夬",u:"dui",d:"qian",lk:"中",br:"果斷決裂，除惡務盡",ci:"夬。揚于王庭。",yi:"澤天夬，象徵決斷。需防範過激。",ad:"果斷但不可過於剛猛。",rl:"對宮：剝卦"},
+{n:44,nm:"姤",u:"qian",d:"xun",lk:"中",br:"不期而遇，謹慎提防",ci:"姤。女壯，勿用取女。",yi:"天風姤，象徵意外相遇。需警惕小人。",ad:"提防小人，慎選交往對象。",rl:"對宮：復卦"},
+{n:45,nm:"萃",u:"dui",d:"kun",lk:"吉",br:"聚集匯合，齊心協力",ci:"萃。亨，王假有廟。",yi:"澤地萃，水聚於低處。人心凝聚則大事可成。",ad:"凝聚人心，廣納賢才。",rl:"對宮：大畜卦"},
+{n:46,nm:"升",u:"kun",d:"xun",lk:"吉",br:"步步高升，穩健發展",ci:"升。元亨，用見大人。",yi:"地風升，地中生木，穩步向上。",ad:"穩健上進，步步為營。",rl:"對宮：無妄卦"},
+{n:47,nm:"困",u:"dui",d:"kan",lk:"凶",br:"困頓受阻，守正待時",ci:"困。亨，貞大人吉。",yi:"澤水困，枯竭困頓。身處困境仍需守正。",ad:"困境中堅守正道，靜待轉機。",rl:"對宮：賁卦"},
+{n:48,nm:"井",u:"kan",d:"xun",lk:"吉",br:"汲取不竭，修德不倦",ci:"井。改邑不改井。",yi:"水風井，取之不盡。修德需持續不懈。",ad:"修德不倦，保持初心。",rl:"對宮：噬嗑卦"},
+{n:49,nm:"革",u:"dui",d:"li",lk:"中",br:"變革更新，順天應人",ci:"革。巳日乃孚，元亨利貞。",yi:"澤火革，象徵變革。時機成熟方可改革。",ad:"改革需順應時勢。",rl:"對宮：蒙卦"},
+{n:50,nm:"鼎",u:"li",d:"xun",lk:"吉",br:"革故鼎新，養賢育才",ci:"鼎。元吉，亨。",yi:"火風鼎，代表革新後的新秩序。",ad:"禮賢下士，開創新局。",rl:"對宮：屯卦"},
+{n:51,nm:"震",u:"zhen",d:"zhen",lk:"中",br:"雷聲震動，驚醒省悟",ci:"震。亨，震來虩虩。",yi:"震為雷，驚天動地。使人恐懼而後反省。",ad:"保持警覺，居安思危。",rl:"對宮：巽卦"},
+{n:52,nm:"艮",u:"gen",d:"gen",lk:"中",br:"知止而定，靜定安寧",ci:"艮其背，不獲其身，無咎。",yi:"艮為山，穩固不動。知所當止。",ad:"知止不殆，安定身心。",rl:"對宮：兌卦"},
+{n:53,nm:"漸",u:"xun",d:"gen",lk:"吉",br:"循序漸進，水到渠成",ci:"漸。女歸吉，利貞。",yi:"風山漸，漸漸生長。不可急於求成。",ad:"循序漸進，穩紮穩打。",rl:"對宮：歸妹卦"},
+{n:54,nm:"歸妹",u:"zhen",d:"dui",lk:"凶",br:"處事不當，需守本分",ci:"歸妹。征凶，無攸利。",yi:"雷澤歸妹，位不當。凡事需守本分。",ad:"安守本分，量力而行。",rl:"對宮：漸卦"},
+{n:55,nm:"豐",u:"zhen",d:"li",lk:"吉",br:"豐盛盈滿，盛極當憂",ci:"豐。亨，王假之。",yi:"雷火豐，光明盛大。日中則昃，需居安思危。",ad:"盛極之時更要謹慎。",rl:"對宮：渙卦"},
+{n:56,nm:"旅",u:"li",d:"gen",lk:"中",br:"旅途在外，謹慎謙卑",ci:"旅。小亨，旅貞吉。",yi:"火山旅，象徵旅行。身處異地需謙和。",ad:"在外謹言慎行。",rl:"對宮：節卦"},
+{n:57,nm:"巽",u:"xun",d:"xun",lk:"吉",br:"柔順謙遜，潛移默化",ci:"巽。小亨，利有攸往。",yi:"巽為風，無孔不入。以柔和之力潛移默化。",ad:"以柔克剛，順勢而為。",rl:"對宮：震卦"},
+{n:58,nm:"兌",u:"dui",d:"dui",lk:"吉",br:"喜悅和樂，人際和諧",ci:"兌。亨，利貞。",yi:"兌為澤，互相滋潤。以真誠和善意與人交往。",ad:"以誠待人，分享喜悅。",rl:"對宮：艮卦"},
+{n:59,nm:"渙",u:"xun",d:"kan",lk:"中",br:"渙散離析，重新凝聚",ci:"渙。亨，王假有廟。",yi:"風水渙，波瀾四散。需以誠信重新凝聚。",ad:"以大義凝聚人心。",rl:"對宮：豐卦"},
+{n:60,nm:"節",u:"kan",d:"dui",lk:"中",br:"節制有度，中庸之道",ci:"節。亨，苦節不可貞。",yi:"水澤節，凡事需適度，過度節制反成苦。",ad:"凡事有度，中庸為上。",rl:"對宮：旅卦"},
+{n:61,nm:"中孚",u:"xun",d:"dui",lk:"吉",br:"誠信中正，至誠感物",ci:"中孚。豚魚吉。",yi:"風澤中孚，至誠之心可以感化萬物。",ad:"以至誠之心待人接物。",rl:"對宮：小過卦"},
+{n:62,nm:"小過",u:"zhen",d:"gen",lk:"中",br:"小有過越，謹慎行事",ci:"小過。亨，利貞。可小事。",yi:"雷山小過，稍有過度。小事可為大事不宜。",ad:"處事宜保守，謙退自守。",rl:"對宮：中孚卦"},
+{n:63,nm:"既濟",u:"kan",d:"li",lk:"吉",br:"功德圓滿，守成防衰",ci:"既濟。亨小，利貞，初吉終亂。",yi:"水火既濟，各得其位。但初吉終亂，需防盛極而衰。",ad:"成功後更需謹慎，善始善終。",rl:"對宮：未濟卦"},
+{n:64,nm:"未濟",u:"li",d:"kan",lk:"凶",br:"事未完成，前路漫漫",ci:"未濟。亨，小狐汔濟，濡其尾。",yi:"火水未濟，事情尚未完成。萬事萬物永遠在演進中。",ad:"繼續努力，不可鬆懈。",rl:"對宮：既濟卦"},
+];
+
+let hexFilter='all',hexQ='';
+function renderHexList(){
+  const filtered=HX.filter(h=>{
+    const ml=hexFilter==='all'||h.lk===hexFilter;
+    if(!hexQ.trim())return ml;
+    const q=hexQ.toLowerCase();
+    return ml&&(h.nm.includes(q)||h.br.includes(q)||h.yi.includes(q)||h.ci.includes(q));
+  });
+  return`
+    <div class="top-bar"><div class="top-label">YIJING · 64 HEXAGRAMS</div><div class="top-title">易經六十四卦</div></div>
+    <div class="search-wrap"><span class="search-icon">⌕</span><input placeholder="搜尋卦名、卦義⋯" oninput="hexQ=this.value;render()"></div>
+    <div style="display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap">
+      ${['all','吉','中','凶'].map(f=>`<button class="filter-btn ${hexFilter===f?'active':''}" onclick="hexFilter='${f}';render()">${f==='all'?'全部':f}</button>`).join('')}
+      <span style="font-size:11px;color:var(--fg3);align-self:center;font-family:-apple-system,sans-serif">${filtered.length}/64</span>
+    </div>
+    <div class="grid-2">${filtered.map(h=>`
+      <div class="hex-card" onclick="pushView('hexDetail',{n:${h.n}})">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
+          <div style="display:flex;align-items:center;gap:10px">
+            ${hexSvg(h.u,h.d,22)}
+            <div><div class="hex-info">第${h.n}卦</div><div class="hex-nm">${h.nm}卦</div></div>
+          </div>
+          <span class="luck luck-${h.lk}">${h.lk}</span>
+        </div>
+        <div class="hex-info">${TG[h.u].n}（${TG[h.u].e}）÷ ${TG[h.d].n}（${TG[h.d].e}）</div>
+        <div class="hex-brief">${h.br}</div>
+      </div>`).join('')}</div>`;
+}
+
+function renderHexDetail(data){
+  const h=HX.find(x=>x.n===data.n);if(!h)return'';
+  const prev=HX.find(x=>x.n===h.n-1),next=HX.find(x=>x.n===h.n+1);
+  return`
+    <div class="nav-bar"><button class="nav-btn" onclick="popView()">← 六十四卦</button></div>
+    <div class="hex-detail">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px">
+        <div style="display:flex;align-items:center;gap:14px">
+          ${hexSvg(h.u,h.d,30)}
+          <div><div class="hex-info">第${h.n}卦</div><div style="font-size:28px;font-weight:400;letter-spacing:3px">${h.nm}卦</div><div class="hex-info" style="margin-top:2px">${TG[h.u].n}（${TG[h.u].e}）÷ ${TG[h.d].n}（${TG[h.d].e}）</div></div>
+        </div>
+        <span class="luck luck-${h.lk}" style="font-size:13px;padding:3px 12px">${h.lk}</span>
+      </div>
+      <div class="hex-sec"><div class="hex-sec-label">卦辭原文</div><div class="hex-quote">${h.ci}</div></div>
+      <div class="hex-sec"><div class="hex-sec-label">核心卦義</div><div class="hex-text">${h.yi}</div></div>
+      <div class="hex-sec"><div class="hex-sec-label">處世建議</div><div class="hex-text">${h.ad}</div></div>
+      <div class="hex-sec"><div class="hex-sec-label">相關卦</div><div style="font-size:13px;color:var(--fg3);font-family:-apple-system,sans-serif">${h.rl}</div></div>
+      <div style="display:flex;justify-content:space-between;margin-top:20px;padding-top:16px;border-top:1px solid var(--border)">
+        ${prev?`<button class="hex-nav" onclick="pushView('hexDetail',{n:${prev.n}});viewStack.splice(-2,1)">← ${prev.nm}卦</button>`:'<div></div>'}
+        ${next?`<button class="hex-nav" style="text-align:right" onclick="pushView('hexDetail',{n:${next.n}});viewStack.splice(-2,1)">${next.nm}卦 →</button>`:'<div></div>'}
+      </div>
+    </div>`;
+}
+
+// ═══ Utils ═══
+function esc(s){if(!s)return'';return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+
+// ═══ PWA Service Worker ═══
+if('serviceWorker'in navigator){navigator.serviceWorker.register('./sw.js').catch(()=>{})}
+
+// ═══ Start ═══
+init();
+</script>
+</body>
+</html>

@@ -1,0 +1,18 @@
+{
+  "name": "我的知識庫",
+  "short_name": "知識庫",
+  "description": "個人知識管理 PWA",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#1A1B1E",
+  "theme_color": "#D4A843",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' rx='90' fill='%231A1B1E'/><text x='256' y='340' font-size='280' text-anchor='middle' fill='%23D4A843'>☯</text></svg>",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
