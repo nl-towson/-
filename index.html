@@ -238,15 +238,15 @@ function showModal(title,text,onConfirm){
 function closeModal(){document.getElementById('modal').classList.add('hidden')}
 
 // ═══ Tab switching ═══
-function switchTab(tab){
+window.switchTab = (tab) =>{
   currentTab=tab;viewStack=[];
   document.querySelectorAll('.tab').forEach((t,i)=>{t.classList.toggle('active',['home','search','hex'][i]===tab)});
   render();
 }
 
 // ═══ Navigation ═══
-function pushView(view,data){viewStack.push({view,data});render()}
-function popView(){viewStack.pop();render()}
+window.pushView = (view, data) =>{viewStack.push({view,data});render()}
+window.popView = () =>{viewStack.pop();render()}
 function currentView(){return viewStack.length?viewStack[viewStack.length-1]:{view:currentTab,data:{}}}
 
 // ═══ Render ═══
@@ -625,17 +625,7 @@ function esc(s){if(!s)return'';return s.replace(/&/g,'&amp;').replace(/</g,'&lt;
 if('serviceWorker'in navigator){navigator.serviceWorker.register('./sw.js').catch(()=>{})}
 
 // ═══ Start ═══
-   // ═══ 讓 HTML 標籤能讀取到模組內的函式 ═══
-window.switchTab = switchTab;
-window.pushView = pushView;
-window.popView = popView;
-window.addShelf = addShelf; // 如果你有這個函式
-window.addFolder = addFolder;
-window.addNote = addNote;
-window.saveNote = saveNote;
-window.delNote = delNote;
-window.editNote = editNote;
-// ... 把所有在 HTML 中用 onclick 呼叫的函式名稱都寫在這裡 
+
 init();
 </script>
 </body>
