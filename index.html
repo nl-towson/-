@@ -138,9 +138,9 @@ img{max-width:100%;border-radius:10px}
 
 <script>
 // ═══ IndexedDB Storage ═══
-// 1. 初始化 Firebase (確保你已在 HTML 頂部引入了 SDK)
+// 1. Firebase 配置 (保持不變)
 const firebaseConfig = {
-    apiKey: "AIzaSyBNCpvL8E--zV5A4umNhVrr6W3DVuGEWPw", //
+    apiKey: "AIzaSyBNCpvL8E--zV5A4umNhVrr6W3DVuGEWPw",
     authDomain: "encyclopedia-37e78.firebaseapp.com",
     projectId: "encyclopedia-37e78",
     storageBucket: "encyclopedia-37e78.firebasestorage.app",
@@ -148,32 +148,40 @@ const firebaseConfig = {
     appId: "1:732048515950:web:65dc9ffa0f490e71cf177f"
 };
 
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
+// 2. 初始化 (使用 CDN 引入以確保能直接在 HTML 運行)
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+import { getFirestore, collection, getDocs, doc, setDoc, deleteDoc, query, orderBy, serverTimestamp } 
+from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-// 2. 替換原本的 dbAll (改為從雲端抓取)
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+// 3. 雲端資料庫函式 (修正為 v10 寫法)
 async function dbAll(storeName) {
-    const snapshot = await db.collection(storeName).orderBy('order', 'asc').get();
-    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const q = query(collection(db, storeName), orderBy('order', 'asc'));
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
 }
 
-// 3. 替換原本的 dbPut (改為同步到雲端)
 async function dbPut(storeName, data) {
     const id = data.id || uid();
-    await db.collection(storeName).doc(id).set({
+    await setDoc(doc(db, storeName, id), {
         ...data,
-        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        updatedAt: serverTimestamp()
     });
     return id;
 }
 
-// 4. 替換原本的 dbDel (雲端刪除)
 async function dbDel(storeName, id) {
-    await db.collection(storeName).doc(id).delete();
+    await deleteDoc(doc(db, storeName, id));
 }
-const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
-const fmtDate=t=>{const d=new Date(t);return`${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`};
 
+// 4. 工具函式 (你保留的部分)
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+const fmtDate = t => {
+    const d = new Date(t);
+    return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`;
+};
 // ═══ State ═══
 let shelves=[],folders=[],notes=[];
 let currentTab='home',viewStack=[],toast_timer;
